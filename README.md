@@ -103,7 +103,52 @@ $ "exit"
 # Set the security context for a Container
 
 
+To specify security settings for a Container, include the securityContext field in the Container manifest. The securityContext field is a [SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#securitycontext-v1-core) object. Security settings that you specify for a Container apply only to the individual Container, and they override settings made at the Pod level when there is overlap. Container settings do not affect the Pod's Volumes.
 
+Here is the configuration file for a Pod that has one Container. Both the Pod and the Container have a securityContext field:
+
+![image](https://user-images.githubusercontent.com/88305831/178482472-41592d46-a7fa-4e93-9ce0-9ab0d02df0dc.png)
+
+
+Create the Pod:
+
+$ "kubectl apply -f security-context-2.yaml"
+
+Verify that the Pod's Container is running:
+
+$ "kubectl get pod security-context-demo-2"
+
+![image](https://user-images.githubusercontent.com/88305831/178482830-7dcc0507-a7fd-41d9-afae-569fb9617629.png)
+
+Now here we have 2 containers "sec-ctx-demo-2" and "busybox" running in the pod "security-context-demo-2"
+
+Get a shell into the running Container "sec-ctx-demo-2".
+
+$ "kubectl exec -it security-context-demo-2 -c sec-ctx-demo-2 -- sh"
+
+In your shell, list the running processes:
+
+$ "ps aux"
+
+The output shows that the processes are running as user 2000. This is the value of runAsUser specified for the Container. It overrides the value 1000 that is specified for the Pod.
+
+![image](https://user-images.githubusercontent.com/88305831/178483585-12df1aeb-574a-4c52-92bb-06bcf6a103ff.png)
+
+Similarly get a shell into the running Container "busybox".
+
+$ "kubectl exec -it security-context-demo-2 -c busybox -- sh"
+
+In your shell, list the running processes:
+
+$ "ps aux"
+
+The output shows that the processes are running as user 4000. This is the value of runAsUser specified for the Container. It overrides the value 1000 that is specified for the Pod.
+
+![image](https://user-images.githubusercontent.com/88305831/178484002-861b389a-48ea-4624-88cc-f922f083f6dc.png)
+
+Exit your shell:
+
+$ "exit"
 
 
 

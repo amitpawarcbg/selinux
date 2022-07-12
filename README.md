@@ -44,6 +44,17 @@ To specify security settings for a Pod, include the securityContext field in the
 
 In the configuration file, the runAsUser field specifies that for any Containers in the Pod, all processes run with user ID 1000. The runAsGroup field specifies the primary group ID of 3000 for all processes within any containers of the Pod. If this field is omitted, the primary group ID of the containers will be root(0). Any files created will also be owned by user 1000 and group 3000 when runAsGroup is specified. Since fsGroup field is specified, all processes of the container are also part of the supplementary group ID 2000. The owner for volume /data/demo and any files created in that volume will be Group ID 2000.
 
+Create the Pod:
+
+$ "kubectl apply -f security-context.yaml"
+
+Verify that the Pod's Container is running:
+
+$ "kubectl get pod security-context-demo"
+
+![image](https://user-images.githubusercontent.com/88305831/178460547-ca3a2543-72da-4430-87c5-61aa9b68487f.png)
+
+
 
 
 

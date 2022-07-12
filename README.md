@@ -150,6 +150,111 @@ Exit your shell:
 
 $ "exit"
 
+---
+
+# Set capabilities for a Container 
+
+With [Linux capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html), you can grant certain privileges to a process without granting all the privileges of the root user. To add or remove Linux capabilities for a Container, include the capabilities field in the securityContext section of the Container manifest.
+
+First, see what happens when you don't include a capabilities field. Here is configuration file that does not add or remove any Container capabilities:
+
+
+![image](https://user-images.githubusercontent.com/88305831/178486442-21e947dd-42e4-48c4-8b2a-2f34669bfde4.png)
+
+
+Create the Pod:
+
+$ "kubectl apply -f security-context-3.yaml"
+
+Verify that the Pod's Container is running:
+
+$ "kubectl get pod security-context-demo-3"
+
+![image](https://user-images.githubusercontent.com/88305831/178486656-c4ba8d1b-eff6-4a34-a9b8-8b6d6ce263d1.png)
+
+
+Get a shell into the running Container:
+
+$ "kubectl exec -it security-context-demo-3 -- sh"
+
+In your shell, list the running processes:
+
+$ "ps aux"
+
+The output shows the process IDs (PIDs) for the Container:
+
+![image](https://user-images.githubusercontent.com/88305831/178486939-1303220e-fdd8-4d83-8842-d204903aa5b0.png)
+
+In your shell, view the status for process 1:
+
+$ "cd /proc/1; cat status"
+
+The output shows the capabilities bitmap for the process:
+
+![image](https://user-images.githubusercontent.com/88305831/178487222-f03c05d6-8e56-4c52-bcaa-df63a9f4738b.png)
+
+Make a note of the capabilities bitmap, and then exit your shell:
+
+$ "exit"
+
+Next, run a Container that is the same as the preceding container, except that it has additional capabilities set.
+
+Here is the configuration file for a Pod that runs one Container. The configuration adds the CAP_NET_ADMIN and CAP_SYS_TIME capabilities:
+
+![image](https://user-images.githubusercontent.com/88305831/178488249-5f7a305d-cad5-4c06-909b-e8905201bff0.png)
+
+
+Create the Pod:
+
+$ "kubectl apply -f security-context-4.yaml"
+
+Get a shell into the running Container:
+
+$ "kubectl exec -it security-context-demo-4 -- sh"
+
+In your shell, view the capabilities for process 1:
+
+$ "cd /proc/1; cat status"
+
+The output shows capabilities bitmap for the process:
+
+![image](https://user-images.githubusercontent.com/88305831/178488913-2e74a47e-8e13-405a-a15a-84c44cb53167.png)
+
+Compare the capabilities of the two Containers:
+
+In the capability bitmap of the first container, bits 12 and 25 are clear. In the second container, bits 12 and 25 are set. Bit 12 is CAP_NET_ADMIN, and bit 25 is CAP_SYS_TIME. See [capability.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/capability.h) for definitions of the capability constants.
+
+Note: Linux capability constants have the form CAP_XXX. But when you list capabilities in your container manifest, you must omit the CAP_ portion of the constant. For example, to add CAP_SYS_TIME, include SYS_TIME in your list of capabilities.
+
+---
+
+# Assign SELinux labels to a Container
+To assign SELinux labels to a Container, include the seLinuxOptions field in the securityContext section of your Pod or Container manifest. The seLinuxOptions field is an [SELinuxOptions](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#selinuxoptions-v1-core) object. Here's an example that applies an SELinux level:
+
+![image](https://user-images.githubusercontent.com/88305831/178490197-bfe8f6c4-c2da-497e-8c4f-0bdbdbdf7bba.png)
+
+Note: To assign SELinux labels, the SELinux security module must be loaded on the host operating system.
+
+**Discussion**
+
+The security context for a Pod applies to the Pod's Containers and also to the Pod's Volumes when applicable. Specifically fsGroup and seLinuxOptions are applied to Volumes as follows:
+
+fsGroup: Volumes that support ownership management are modified to be owned and writable by the GID specified in fsGroup. See the [Ownership Management design document](https://github.com/kubernetes/design-proposals-archive/blob/main/storage/volume-ownership-management.md) for more details.
+
+seLinuxOptions: Volumes that support SELinux labeling are relabeled to be accessible by the label specified under seLinuxOptions. Usually you only need to set the level section. This sets the [Multi-Category Security (MCS)](https://selinuxproject.org/page/NB_MLS) label given to all Containers in the Pod as well as the Volumes.
+
+Warning: After you specify an MCS label for a Pod, all Pods with the same label can access the Volume. If you need inter-Pod protection, you must assign a unique MCS label to each Pod.
+
+**Clean up**
+
+Delete the Pod:
+
+$ "kubectl delete pod security-context-demo"
+$ "kubectl delete pod security-context-demo-2"
+$ "kubectl delete pod security-context-demo-3"
+$ "kubectl delete pod security-context-demo-4"
+
+
 
 
 
